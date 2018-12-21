@@ -1,24 +1,71 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
+    <div class="content-container">
         <div class="col-sm-offset-2 col-sm-8">
+            <!-- Current Tasks -->
+            @if (count($tasks) > 0)
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="panel-heading tasks-header">
+                            משימות
+                        </div>
+                        <table class="table table-striped task-table">
+                            <thead>
+                                <th>משימה</th>
+                                <th>&nbsp;</th>
+                            </thead>
+                            <tbody>
+                                @foreach ($tasks as $key=>$task)
+                                    <tr>
+                                        <!-- Task Status Button -->
+                                        <td>
+                                            <form action="{{ url('task/'.$task->id) }}" method="POST">
+                                                {{ csrf_field() }}
+                                                {{ method_field('DELETE') }}
+
+                                                <button type="submit" class="delete">
+                                                    X
+                                                </button>
+                                            </form>
+                                        </td>
+                                        <td class="table-text"><div>{{ intval($key+1).". ".$task->name }}</div></td>
+
+                                        <!-- Task Delete Button -->
+                                        <td class="delete-button">
+                                            <form action="{{ url('task/'.$task->id) }}" method="POST">
+                                                {{ csrf_field() }}
+                                                {{ method_field('DELETE') }}
+                                                <label class="container">
+                                                    {{ Form::checkbox('status',1,$task->status, array('id'=>'asap')) }}
+                                                    <span class="checkmark"></span>
+                                                </label>
+
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    New Task
+                    משימה חדשה
                 </div>
 
                 <div class="panel-body">
                     <!-- Display Validation Errors -->
-                    @include('common.errors')
+                @include('common.errors')
 
-                    <!-- New Task Form -->
+                <!-- New Task Form -->
                     <form action="{{ url('task')}}" method="POST" class="form-horizontal">
-                        {{ csrf_field() }}
+                    {{ csrf_field() }}
 
-                        <!-- Task Name -->
+                    <!-- Task Name -->
                         <div class="form-group">
-                            <label for="task-name" class="col-sm-3 control-label">Task</label>
+                            <label for="task-name" class="col-sm-3 control-label">משימה</label>
 
                             <div class="col-sm-6">
                                 <input type="text" name="name" id="task-name" class="form-control" value="{{ old('task') }}">
@@ -36,43 +83,6 @@
                     </form>
                 </div>
             </div>
-
-            <!-- Current Tasks -->
-            @if (count($tasks) > 0)
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        Current Tasks
-                    </div>
-
-                    <div class="panel-body">
-                        <table class="table table-striped task-table">
-                            <thead>
-                                <th>Task</th>
-                                <th>&nbsp;</th>
-                            </thead>
-                            <tbody>
-                                @foreach ($tasks as $task)
-                                    <tr>
-                                        <td class="table-text"><div>{{ $task->name }}</div></td>
-
-                                        <!-- Task Delete Button -->
-                                        <td>
-                                            <form action="{{ url('task/'.$task->id) }}" method="POST">
-                                                {{ csrf_field() }}
-                                                {{ method_field('DELETE') }}
-
-                                                <button type="submit" class="btn btn-danger">
-                                                    <i class="fa fa-btn fa-trash"></i>Delete
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            @endif
         </div>
     </div>
 @endsection

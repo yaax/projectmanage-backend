@@ -24,33 +24,81 @@ Route::group(['middleware' => ['web']], function () {
         ]);
     });
 
+    Route::get('/tasks', function () {
+        return response()->json(['tasks'=>Task::orderBy('created_at', 'asc')->get()]);
+    });
+
     /**
      * Add New Task
      */
-    Route::post('/task', function (Request $request) {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|max:255',
-        ]);
+    Route::post('/tasks', function (Request $request) {
+        if (empty($request->task['name'])) {
+            return response()->json(['errors'=>"invalid param name"]);
+        }
 
-        if ($validator->fails()) {
-            return redirect('/')
-                ->withInput()
-                ->withErrors($validator);
+        if (!isset($request->task['status']) || !in_array($request->task['status'],[0,1,'true','false'])) {
+            return response()->json(['errors'=>"invalid param status"]);
         }
 
         $task = new Task;
-        $task->name = $request->name;
+        $task->name = $request->task['name'];
+        $task->status = boolval($request->task['status'])?1:0;
+
         $task->save();
 
-        return redirect('/');
+        return response()->json(['tasks'=>$task]);
     });
+
+    Route::put('tasks/{id}', function(Request $request, $id) {
+        if (!is_numeric($id) || (is_numeric($id) && $id<1)) {
+            return response()->json(['errors'=>"invalid id"]);
+        }
+
+        if (!$request->has('task')) {
+            return response()->json(['errors'=>"invalid params"]);
+        }
+
+        if (empty($request->task['name'])) {
+            return response()->json(['errors'=>"invalid param name"]);
+        }
+
+        if (!isset($request->task['status']) || !in_array($request->task['status'],[0,1,'true','false'])) {
+            return response()->json(['errors'=>"invalid param status"]);
+        }
+
+        $task = Task::where('id', $id)->firstOrFail();
+
+        $task->name = $request->task['name'];
+        $task->status = boolval($request->task['status']) ;
+
+        return response()->json([
+            'data' => [
+                'success' => $task->save(),
+            ]
+        ]);
+    });
+
+    Route::get('/tasks/{id}', function ($id) {
+        if (!is_numeric($id) || (is_numeric($id) && $id<1)) {
+            return response()->json(['errors'=>"invalid id"]);
+        }
+
+        return response()->json(['tasks'=>Task::where('id', $id)->firstOrFail()]);
+    });
+
 
     /**
      * Delete Task
      */
-    Route::delete('/task/{id}', function ($id) {
-        Task::findOrFail($id)->delete();
+    Route::delete('/tasks/{id}', function ($id) {
+        if (!is_numeric($id) || (is_numeric($id) && $id<1)) {
+            return response()->json(['errors'=>"invalid id"]);
+        }
 
-        return redirect('/');
+        return response()->json([
+            'data' => [
+                'success' => Task::findOrFail($id)->delete(),
+            ]
+        ]);
     });
 });
